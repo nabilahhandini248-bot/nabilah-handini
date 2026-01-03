@@ -3,203 +3,360 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Student Master 24h - No AM/PM</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>AI Student Planner Pro</title>
+
     <style>
-        :root { --primary: #4f46e5; --bg: #f8fafc; --card: #ffffff; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: var(--bg); padding: 20px; color: #1e293b; }
-        .container { max-width: 1000px; margin: auto; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .card { background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        h3 { margin-bottom: 15px; color: var(--primary); font-size: 1.1rem; }
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e40af, #2563eb);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        header h1 { margin: 0; font-size: 2rem; font-weight: 800; letter-spacing: -0.025em; }
+        header p { margin: 8px 0 0; opacity: 0.9; font-weight: 300; }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 24px;
+            max-width: 1400px;
+            margin: -30px auto 40px;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+
+        h3 { margin-bottom: 20px; font-size: 1.25rem; display: flex; align-items: center; gap: 8px; }
         
-        label { display: block; font-size: 0.8rem; font-weight: 700; margin: 10px 0 5px; color: #64748b; }
-        
+        /* Form Styling */
+        .form-group { margin-bottom: 15px; }
+        label { font-size: 0.875rem; font-weight: 600; color: var(--text-sub); display: block; margin-bottom: 4px; }
         input, select {
-            width: 100%; padding: 12px; border: 2px solid #e2e8f0; 
-            border-radius: 10px; font-size: 1rem; outline: none; transition: 0.2s;
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            box-sizing: border-box;
         }
-        input:focus, select:focus { border-color: var(--primary); background: #f5f3ff; }
+        input:focus, select:focus { outline: 2px solid var(--primary); border-color: transparent; }
 
-        /* Container Jam & Menit berdampingan */
-        .time-picker-24h { display: flex; gap: 10px; }
-        .time-picker-24h select { flex: 1; text-align: center; }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+            margin-top: 10px;
+        }
+        button:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        button:active { transform: translateY(0); }
 
-        .btn { 
-            width: 100%; padding: 12px; margin-top: 15px; border: none; 
-            border-radius: 10px; color: white; font-weight: 700; cursor: pointer; background: var(--primary);
+        /* Calendar Styling */
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+        }
+        .day {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 12px;
+            min-height: 150px;
+            transition: box-shadow 0.3s;
+        }
+        .day:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .day span {
+            display: block;
+            text-align: center;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+            border-bottom: 2px solid var(--bg);
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--primary);
         }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; border-radius: 10px; overflow: hidden; }
-        th { background: #eeefff; padding: 12px; text-align: left; font-size: 0.8rem; }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
-        
-        .ai-alert { background: #4f46e5; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
-        .badge { font-size: 0.75rem; padding: 3px 8px; border-radius: 5px; font-weight: bold; }
+        /* Event Pills */
+        .event {
+            margin-top: 8px;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            line-height: 1.2;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .kuliah { background: #dbeafe; color: #1e40af; border-left: 4px solid #1e40af; }
+        .belajar { background: #dcfce7; color: #166534; border-left: 4px solid #166534; }
+        .organisasi { background: #fef9c3; color: #854d0e; border-left: 4px solid #854d0e; }
+        .seminar { background: #fee2e2; color: #991b1b; border-left: 4px solid #991b1b; }
+        .lainnya { background: #f1f5f9; color: #475569; border-left: 4px solid #475569; }
+
+        /* AI Analysis Box */
+        #ai {
+            margin-top: 15px;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+        }
+        .ai-card-warn { background: #fff7ed; border: 1px solid #ffedd5; color: #9a3412; }
+        .ai-card-ok { background: #f0fdf4; border: 1px solid #dcfce7; color: #166534; }
+
+        hr { border: 0; border-top: 1px solid var(--border); margin: 24px 0; }
+
+        @media (max-width: 900px) {
+            .container { grid-template-columns: 1fr; }
+            header { padding: 20px; }
+        }
     </style>
 </head>
 <body>
 
+<header>
+    <h1>🚀 AI Student Planner</h1>
+    <p>Optimalkan waktu kuliah dan aktivitasmu secara cerdas</p>
+</header>
+
 <div class="container">
-    <div class="ai-alert">
-        <strong>🤖 AI Strategic Planner:</strong> <span id="aiMsg">Sistem siap mengelola beban SKS dan agenda bulanan Anda.</span>
+    <div class="card">
+        <h3>📅 Jadwal Mingguan</h3>
+        <div class="calendar" id="calendar"></div>
     </div>
 
-    <div class="grid">
-        <div class="card">
-            <h3>📚 Kuliah (Semester)</h3>
-            <label>Mata Kuliah</label>
-            <input type="text" id="cName" placeholder="Contoh: Basis Data">
-            <label>Jumlah SKS</label>
-            <input type="number" id="cSks" placeholder="Contoh: 3">
-            <label>Hari</label>
-            <select id="cDay">
-                <option>Senin</option><option>Selasa</option><option>Rabu</option>
-                <option>Kamis</option><option>Jumat</option><option>Sabtu</option>
-            </select>
-            
-            <label>Jam Mulai (Format 24 Jam)</label>
-            <div class="time-picker-24h">
-                <select id="cHour"></select>
-                <select id="cMin"></select>
+    <div class="card">
+        <h3>📚 Tambah Mata Kuliah</h3>
+        <div class="form-group">
+            <label>Nama Mata Kuliah</label>
+            <input id="mkNama" placeholder="Contoh: Kalkulus Struktur">
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+                <label>SKS</label>
+                <select id="mkSks">
+                    <option value="2">2 SKS</option>
+                    <option value="3">3 SKS</option>
+                    <option value="4">4 SKS</option>
+                </select>
             </div>
-            
-            <button class="btn" onclick="addSks()">Simpan Jadwal Semester</button>
+            <div class="form-group">
+                <label>Hari</label>
+                <select id="mkHari"></select>
+            </div>
         </div>
 
-        <div class="card">
-            <h3>🎭 Kegiatan (Bulanan)</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+                <label>Mulai</label>
+                <select id="mkMulai"></select>
+            </div>
+            <div class="form-group">
+                <label>Selesai</label>
+                <select id="mkSelesai"></select>
+            </div>
+        </div>
+        <button onclick="tambahMK()">+ Tambahkan Matkul</button>
+
+        <hr>
+
+        <h3>🎯 Aktivitas Lain</h3>
+        <div class="form-group">
             <label>Nama Kegiatan</label>
-            <input type="text" id="mName" placeholder="Contoh: Seminar Karier">
+            <input id="kNama" placeholder="Contoh: Rapat Himpunan">
+        </div>
+
+        <div class="form-group">
             <label>Kategori</label>
-            <select id="mCat">
-                <option>Organisasi</option><option>Seminar</option><option>Hobi</option><option>Istirahat</option>
+            <select id="kKategori">
+                <option value="Organisasi">🏢 Organisasi</option>
+                <option value="Seminar">🎤 Seminar</option>
+                <option value="Istirahat">😴 Istirahat</option>
+                <option value="Lainnya">✨ Lainnya</option>
             </select>
-            <label>Tanggal</label>
-            <input type="date" id="mDate" onclick="this.showPicker()">
-            
-            <label>Jam Kegiatan (Format 24 Jam)</label>
-            <div class="time-picker-24h">
-                <select id="mHour"></select>
-                <select id="mMin"></select>
-            </div>
-            
-            <button class="btn" style="background:#10b981" onclick="addMonth()">Tambah Agenda Bulanan</button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+            <select id="kHari"></select>
+            <select id="kMulai"></select>
+            <select id="kSelesai"></select>
+        </div>
+        <button style="background: #475569;" onclick="tambahKegiatan()">+ Tambah Kegiatan</button>
+
+        <hr>
+
+        <h3>🤖 AI Analysis</h3>
+        <div id="ai" class="ai-card-ok">
+            Belum ada data untuk dianalisis.
         </div>
     </div>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Waktu</th>
-                <th>Aktivitas</th>
-                <th>Kategori</th>
-                <th>Tipe</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody id="resBody"></tbody>
-    </table>
 </div>
 
 <script>
-    let data = JSON.parse(localStorage.getItem('ai_student_24h')) || [];
+const days=["Senin","Selasa","Rabu","Kamis","Jumat","Sabtu","Minggu"];
+const calendar=document.getElementById("calendar");
+let data=[];
 
-    // Fungsi untuk mengisi pilihan Jam (00-23) dan Menit (00-59)
-    function populateTimeSelectors() {
-        const hourPickers = [document.getElementById('cHour'), document.getElementById('mHour')];
-        const minPickers = [document.getElementById('cMin'), document.getElementById('mMin')];
+// Init Calendar Days
+days.forEach(d=>{
+    let div=document.createElement("div");
+    div.className="day";
+    div.innerHTML=`<span>${d}</span><div class="events-container"></div>`;
+    calendar.appendChild(div);
+});
 
-        hourPickers.forEach(p => {
-            for(let i=0; i<24; i++) {
-                let h = i.toString().padStart(2, '0');
-                p.innerHTML += `<option value="${h}">${h}</option>`;
-            }
+// Populate Select Options
+days.forEach(d=>{
+    mkHari.innerHTML+=`<option>${d}</option>`;
+    kHari.innerHTML+=`<option>${d}</option>`;
+});
+
+function fillTime(sel){
+    for(let h=6;h<=22;h++){
+        ["00","30"].forEach(m=>{
+            let t=`${String(h).padStart(2,'0')}:${m}`;
+            sel.innerHTML+=`<option value="${t}">${t}</option>`;
         });
-
-        minPickers.forEach(p => {
-            for(let i=0; i<60; i++) {
-                let m = i.toString().padStart(2, '0');
-                p.innerHTML += `<option value="${m}">${m}</option>`;
-            }
-        });
     }
+}
+fillTime(mkMulai); fillTime(mkSelesai);
+fillTime(kMulai); fillTime(kSelesai);
 
-    function addSks() {
-        const n = document.getElementById('cName').value;
-        const s = document.getElementById('cSks').value;
-        const d = document.getElementById('cDay').value;
-        const h = document.getElementById('cHour').value;
-        const m = document.getElementById('cMin').value;
+function toMin(t){
+    let p=t.split(":");
+    return +p[0]*60+ +p[1];
+}
 
-        if(!n || !s) return alert("Mohon lengkapi data kuliah!");
+function tambahMK(){
+    if(!mkNama.value){ alert("Isi nama mata kuliah!"); return; }
+    let mk={
+        nama: "📖 " + mkNama.value,
+        hari: mkHari.value,
+        mulai: toMin(mkMulai.value),
+        selesai: toMin(mkSelesai.value),
+        kategori: "Kuliah",
+        prioritas: 1
+    };
+    if(mk.selesai <= mk.mulai){ alert("Jam selesai harus lebih besar!"); return; }
+    data.push(mk);
 
-        data.push({ 
-            id: Date.now(), 
-            name: n, 
-            time: `${h}:${m}`, 
-            dateInfo: d, 
-            cat: 'Akademik', 
-            detail: s + ' SKS', 
-            type: 'Semester' 
-        });
-        save();
-    }
-
-    function addMonth() {
-        const n = document.getElementById('mName').value;
-        const cat = document.getElementById('mCat').value;
-        const date = document.getElementById('mDate').value;
-        const h = document.getElementById('mHour').value;
-        const m = document.getElementById('mMin').value;
-
-        if(!n || !date) return alert("Mohon lengkapi data agenda!");
-
-        data.push({ 
-            id: Date.now(), 
-            name: n, 
-            time: `${h}:${m}`, 
-            dateInfo: date, 
-            cat: cat, 
-            detail: 'Agenda Bulanan', 
-            type: 'Bulanan' 
-        });
-        save();
-    }
-
-    function save() {
-        localStorage.setItem('ai_student_24h', JSON.stringify(data));
-        render();
-    }
-
-    function render() {
-        const b = document.getElementById('resBody');
-        b.innerHTML = '';
-        data.sort((x,y) => x.time.localeCompare(y.time));
-
-        data.forEach(i => {
-            b.innerHTML += `
-                <tr>
-                    <td><b>${i.time}</b><br><small>${i.dateInfo}</small></td>
-                    <td>${i.name}<br><small style="color:gray">${i.detail}</small></td>
-                    <td><i>${i.cat}</i></td>
-                    <td><span class="badge" style="background:${i.type === 'Semester' ? '#e0e7ff' : '#dcfce7'}">${i.type}</span></td>
-                    <td><button onclick="del(${i.id})" style="color:red; cursor:pointer; border:none; background:none;">Hapus</button></td>
-                </tr>
-            `;
-        });
-        document.getElementById('aiMsg').innerText = data.length > 5 ? "Status: Jadwal padat. AI menyarankan prioritas akademik." : "Status: Jadwal seimbang.";
-    }
-
-    function del(id) {
-        data = data.filter(i => i.id !== id);
-        save();
-    }
-
-    // Inisialisasi
-    populateTimeSelectors();
+    // Auto-generate Study Time based on SKS
+    let belajar={
+        nama: "💡 Review: " + mkNama.value,
+        hari: mk.hari,
+        mulai: mk.selesai + 30,
+        selesai: mk.selesai + 30 + (mkSks.value * 50), // 50 min per sks study
+        kategori: "Belajar",
+        prioritas: 2
+    };
+    data.push(belajar);
+    mkNama.value="";
     render();
+    aiAnalysis();
+}
+
+function tambahKegiatan(){
+    if(!kNama.value){ alert("Isi nama kegiatan!"); return; }
+    let prio={Organisasi:4, Seminar:3, Istirahat:5, Lainnya:5};
+    let k={
+        nama: kNama.value,
+        hari: kHari.value,
+        mulai: toMin(kMulai.value),
+        selesai: toMin(kSelesai.value),
+        kategori: kKategori.value,
+        prioritas: prio[kKategori.value] || 5
+    };
+    if(k.selesai <= k.mulai){ alert("Jam selesai harus lebih besar!"); return; }
+    data.push(k);
+    kNama.value="";
+    render();
+    aiAnalysis();
+}
+
+function render(){
+    document.querySelectorAll(".event").forEach(e=>e.remove());
+    data.forEach(d=>{
+        let idx=days.indexOf(d.hari);
+        if(idx>=0){
+            let ev=document.createElement("div");
+            ev.className="event "+d.kategori.toLowerCase();
+            ev.innerHTML=`${d.nama}<br><small style="opacity:0.8">${Math.floor(d.mulai/60)}:${(d.mulai%60).toString().padStart(2,'0')}</small>`;
+            calendar.children[idx].querySelector(".events-container").appendChild(ev);
+        }
+    });
+}
+
+function aiAnalysis(){
+    let aiBox = document.getElementById("ai");
+    let konflik=null;
+
+    for(let i=0;i<data.length;i++){
+        for(let j=i+1;j<data.length;j++){
+            let a=data[i],b=data[j];
+            if(a.hari===b.hari && a.mulai<b.selesai && b.mulai<a.selesai){
+                konflik=a.prioritas<b.prioritas?a:b;
+            }
+        }
+    }
+
+    let total=data.reduce((s,d)=>s+(d.selesai-d.mulai),0);
+    let luang=7*24*60-total;
+
+    if(konflik){
+        aiBox.className = "ai-card-warn";
+        aiBox.innerHTML=`
+            <strong style="display:block;margin-bottom:5px;">⚠️ Bentrok Terdeteksi</strong>
+            Saran AI: Jadwal <b>${konflik.nama}</b> bertabrakan. prioritaskan yang lebih penting dan atur ulang sisanya.`;
+    }else if(luang>5000){
+        aiBox.className = "ai-card-ok";
+        aiBox.innerHTML=`
+            <strong style="display:block;margin-bottom:5px;">✅ Jadwal Optimal</strong>
+            Waktu luangmu cukup banyak. AI menyarankan untuk mengambil kursus online atau olahraga agar tetap fit!`;
+    }else{
+        aiBox.className = "ai-card-warn";
+        aiBox.innerHTML=`
+            <strong style="display:block;margin-bottom:5px;">🔥 Jadwal Sangat Padat</strong>
+            Hati-hati burnout! Pastikan menyisipkan waktu istirahat minimal 15 menit di sela aktivitas.`;
+    }
+}
 </script>
+
 </body>
 </html>
