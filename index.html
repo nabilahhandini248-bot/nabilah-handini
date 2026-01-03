@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Student Master 24h - No AM/PM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #4f46e5; --bg: #f8fafc; --card: #ffffff; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: var(--bg); padding: 20px; color: #1e293b; }
+        .container { max-width: 1000px; margin: auto; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        h3 { margin-bottom: 15px; color: var(--primary); font-size: 1.1rem; }
+        
+        label { display: block; font-size: 0.8rem; font-weight: 700; margin: 10px 0 5px; color: #64748b; }
+        
+        input, select {
+            width: 100%; padding: 12px; border: 2px solid #e2e8f0; 
+            border-radius: 10px; font-size: 1rem; outline: none; transition: 0.2s;
+        }
+        input:focus, select:focus { border-color: var(--primary); background: #f5f3ff; }
+
+        /* Container Jam & Menit berdampingan */
+        .time-picker-24h { display: flex; gap: 10px; }
+        .time-picker-24h select { flex: 1; text-align: center; }
+
+        .btn { 
+            width: 100%; padding: 12px; margin-top: 15px; border: none; 
+            border-radius: 10px; color: white; font-weight: 700; cursor: pointer; background: var(--primary);
+        }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; border-radius: 10px; overflow: hidden; }
+        th { background: #eeefff; padding: 12px; text-align: left; font-size: 0.8rem; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
+        
+        .ai-alert { background: #4f46e5; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .badge { font-size: 0.75rem; padding: 3px 8px; border-radius: 5px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="ai-alert">
+        <strong>🤖 AI Strategic Planner:</strong> <span id="aiMsg">Sistem siap mengelola beban SKS dan agenda bulanan Anda.</span>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h3>📚 Kuliah (Semester)</h3>
+            <label>Mata Kuliah</label>
+            <input type="text" id="cName" placeholder="Contoh: Basis Data">
+            <label>Jumlah SKS</label>
+            <input type="number" id="cSks" placeholder="Contoh: 3">
+            <label>Hari</label>
+            <select id="cDay">
+                <option>Senin</option><option>Selasa</option><option>Rabu</option>
+                <option>Kamis</option><option>Jumat</option><option>Sabtu</option>
+            </select>
+            
+            <label>Jam Mulai (Format 24 Jam)</label>
+            <div class="time-picker-24h">
+                <select id="cHour"></select>
+                <select id="cMin"></select>
+            </div>
+            
+            <button class="btn" onclick="addSks()">Simpan Jadwal Semester</button>
+        </div>
+
+        <div class="card">
+            <h3>🎭 Kegiatan (Bulanan)</h3>
+            <label>Nama Kegiatan</label>
+            <input type="text" id="mName" placeholder="Contoh: Seminar Karier">
+            <label>Kategori</label>
+            <select id="mCat">
+                <option>Organisasi</option><option>Seminar</option><option>Hobi</option><option>Istirahat</option>
+            </select>
+            <label>Tanggal</label>
+            <input type="date" id="mDate" onclick="this.showPicker()">
+            
+            <label>Jam Kegiatan (Format 24 Jam)</label>
+            <div class="time-picker-24h">
+                <select id="mHour"></select>
+                <select id="mMin"></select>
+            </div>
+            
+            <button class="btn" style="background:#10b981" onclick="addMonth()">Tambah Agenda Bulanan</button>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Waktu</th>
+                <th>Aktivitas</th>
+                <th>Kategori</th>
+                <th>Tipe</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="resBody"></tbody>
+    </table>
+</div>
+
+<script>
+    let data = JSON.parse(localStorage.getItem('ai_student_24h')) || [];
+
+    // Fungsi untuk mengisi pilihan Jam (00-23) dan Menit (00-59)
+    function populateTimeSelectors() {
+        const hourPickers = [document.getElementById('cHour'), document.getElementById('mHour')];
+        const minPickers = [document.getElementById('cMin'), document.getElementById('mMin')];
+
+        hourPickers.forEach(p => {
+            for(let i=0; i<24; i++) {
+                let h = i.toString().padStart(2, '0');
+                p.innerHTML += `<option value="${h}">${h}</option>`;
+            }
+        });
+
+        minPickers.forEach(p => {
+            for(let i=0; i<60; i++) {
+                let m = i.toString().padStart(2, '0');
+                p.innerHTML += `<option value="${m}">${m}</option>`;
+            }
+        });
+    }
+
+    function addSks() {
+        const n = document.getElementById('cName').value;
+        const s = document.getElementById('cSks').value;
+        const d = document.getElementById('cDay').value;
+        const h = document.getElementById('cHour').value;
+        const m = document.getElementById('cMin').value;
+
+        if(!n || !s) return alert("Mohon lengkapi data kuliah!");
+
+        data.push({ 
+            id: Date.now(), 
+            name: n, 
+            time: `${h}:${m}`, 
+            dateInfo: d, 
+            cat: 'Akademik', 
+            detail: s + ' SKS', 
+            type: 'Semester' 
+        });
+        save();
+    }
+
+    function addMonth() {
+        const n = document.getElementById('mName').value;
+        const cat = document.getElementById('mCat').value;
+        const date = document.getElementById('mDate').value;
+        const h = document.getElementById('mHour').value;
+        const m = document.getElementById('mMin').value;
+
+        if(!n || !date) return alert("Mohon lengkapi data agenda!");
+
+        data.push({ 
+            id: Date.now(), 
+            name: n, 
+            time: `${h}:${m}`, 
+            dateInfo: date, 
+            cat: cat, 
+            detail: 'Agenda Bulanan', 
+            type: 'Bulanan' 
+        });
+        save();
+    }
+
+    function save() {
+        localStorage.setItem('ai_student_24h', JSON.stringify(data));
+        render();
+    }
+
+    function render() {
+        const b = document.getElementById('resBody');
+        b.innerHTML = '';
+        data.sort((x,y) => x.time.localeCompare(y.time));
+
+        data.forEach(i => {
+            b.innerHTML += `
+                <tr>
+                    <td><b>${i.time}</b><br><small>${i.dateInfo}</small></td>
+                    <td>${i.name}<br><small style="color:gray">${i.detail}</small></td>
+                    <td><i>${i.cat}</i></td>
+                    <td><span class="badge" style="background:${i.type === 'Semester' ? '#e0e7ff' : '#dcfce7'}">${i.type}</span></td>
+                    <td><button onclick="del(${i.id})" style="color:red; cursor:pointer; border:none; background:none;">Hapus</button></td>
+                </tr>
+            `;
+        });
+        document.getElementById('aiMsg').innerText = data.length > 5 ? "Status: Jadwal padat. AI menyarankan prioritas akademik." : "Status: Jadwal seimbang.";
+    }
+
+    function del(id) {
+        data = data.filter(i => i.id !== id);
+        save();
+    }
+
+    // Inisialisasi
+    populateTimeSelectors();
+    render();
+</script>
+</body>
+</html>
